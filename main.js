@@ -53,22 +53,36 @@ var wSM = {
 			searchWords: wSearchTermArray,
 			foundLinks: [],
 			wModel: [],
-			cronSchedule: "*/59 * * * *", // every 1 hour
+			cronTop: "*/3* * *", // every 3 hours
+			cronNew: "*/59 * * * *", // every 1 hour
 		});
 
 		// schedule via node-schedule
-		var wNewJob = schedule.scheduleJob( wSM.trackedSubs[ wCINX ].cronSchedule , function() {
-			wSM.enumerateSubRedditDEEP( wCINX );
+		var wTopJob = schedule.scheduleJob( wSM.trackedSubs[ wCINX ].cronTop , function() {
+			if ( wEmitter == null ) {
+				wSM.enumerateSubRedditDEEP( wCINX , wSM.trackedSubs[wCINX].urls.top );
+			}
+			else {
+				setTimeout( function() {
+					wSM.enumerateSubRedditDEEP( wCINX , wSM.trackedSubs[wCINX].urls.top );
+				} , 100000 )
+			}
 		});
 
+		var wNewJob = schedule.scheduleJob( wSM.trackedSubs[ wCINX ].cronNew , function() {
+			wSM.enumerateSubRedditDEEP( wCINX , wSM.trackedSubs[wCINX].urls.new );
+		});
+
+
+		wSM.activeJobs.push( wTopJob );
 		wSM.activeJobs.push( wNewJob );
 
 
-		//wSM.enumerateSubRedditDEEP( wCINX );
+		wSM.enumerateSubRedditDEEP( wCINX , wSM.trackedSubs[wCINX].urls.new );
 
 	},
 
-	enumerateSubRedditDEEP: function( wIndex ) {
+	enumerateSubRedditDEEP: function( wIndex , wSortMode ) {
 
 		wEmitter = new emitter;
 
@@ -80,7 +94,7 @@ var wSM = {
 		var wCLen = 0; // global needed
 
 		var wSubChildrenLength = 0;
-		wSM.fetchXML( wSM.trackedSubs[wIndex].urls.top , "topOfSubComplete" );
+		wSM.fetchXML( wSortMode , "topOfSubComplete" );
 		wEmitter.on( "topOfSubComplete" , function( wResults ) {
 			wSubChildrenLength = wResults.length - 1;
 			console.log( "Total Children == " + wSubChildrenLength.toString() );
