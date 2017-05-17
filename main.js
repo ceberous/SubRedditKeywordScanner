@@ -21,9 +21,9 @@ catch (err) {
 
 
 var server 	= email.server.connect({
-   user:    "", 
-   password:"", 
-   host:    "", 
+   user:    "subreddit.notifier", 
+   password:"lamorsa2372", 
+   host:    "smtp.gmail.com", 
    ssl:     true
 });
 
@@ -149,8 +149,8 @@ var wSM = {
 			var wMinutes = Math.floor( wSeconds / 60 );
 			var wLeftSec = wSeconds % 60;
 			console.log( "Task took " + wMinutes.toString() + " min && " + wLeftSec.toString() + " seconds" );
-			clearEmitter();
 			compareToSavedResults();
+			clearEmitter();
 		});
 
 		function clearEmitter() {
