@@ -8,12 +8,8 @@ var jsonfile = require("jsonfile");
 var email 	= require("emailjs");
 
 var saveFilePath = path.join( __dirname , "savedSubRedditSearchResults.json" );
-var savedResults = {};
-jsonfile.writeFileSync( saveFilePath , savedResults );
-
-try {
-	savedResults = jsonfile.readFileSync( saveFilePath );
-}
+var savedResults;
+try { savedResults = jsonfile.readFileSync( saveFilePath ); }
 catch (err) {
 	savedResults = {};
 	jsonfile.writeFileSync( saveFilePath , savedResults );
