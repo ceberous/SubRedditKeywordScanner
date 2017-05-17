@@ -288,4 +288,3 @@ var wSM = {
 
 
 wSM.monitor( "science" , [ "autis" ] );
-//wFM.monitor("https://www.reddit.com/r/science/comments/4dvyxy/science_ama_series_im_tristram_smith_phd_of_the/.rss");
