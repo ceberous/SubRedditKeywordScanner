@@ -21,9 +21,9 @@ catch (err) {
 
 
 var server 	= email.server.connect({
-   user:    "subreddit.notifier", 
-   password:"lamorsa2372", 
-   host:    "smtp.gmail.com", 
+   user:    "", 
+   password:"", 
+   host:    "", 
    ssl:     true
 });
 
