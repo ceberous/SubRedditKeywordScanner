@@ -1,0 +1,19 @@
+{
+  "name": "subredditparser",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "emailjs": "^1.0.8",
+    "events": "^1.1.1",
+    "feedparser": "^2.2.0",
+    "jsonfile": "^3.0.0",
+    "node-schedule": "^1.2.1",
+    "request": "^2.81.0"
+  }
+}
