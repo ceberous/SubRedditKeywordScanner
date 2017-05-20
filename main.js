@@ -54,6 +54,7 @@ var wSM = {
 			cronNew: "*/59 * * * *", // every 1 hour
 		});
 
+
 		var wTopJob = schedule.scheduleJob( wSM.trackedSubs[ wCINX ].cronTop , function() {
 			if ( wEmitter == null ) {
 				wSM.enumerateSubRedditDEEP( wCINX , wSM.trackedSubs[wCINX].urls.top );
@@ -72,12 +73,14 @@ var wSM = {
 
 		wSM.activeJobs.push( wTopJob );
 		wSM.activeJobs.push( wNewJob );
+
 		
-		
-		//var wKey = process.argv[2] || "new";
-		//console.log(wKey);
-		//console.log( wSM.trackedSubs[wCINX].urls[wKey] );
-		//wSM.enumerateSubRedditDEEP( wCINX , wSM.trackedSubs[wCINX].urls[wKey] );
+		/*
+		var wKey = process.argv[2] || "new";
+		console.log(wKey);
+		console.log( wSM.trackedSubs[wCINX].urls[wKey] );
+		wSM.enumerateSubRedditDEEP( wCINX , wSM.trackedSubs[wCINX].urls[wKey] );
+		*/
 
 	},
 
@@ -136,16 +139,13 @@ var wSM = {
 
 		function scanTitles( wIndex ) {
 			console.log("scanning titles");
+			var wSTResult;
 			for ( var i = 0; i < wTitles.length; ++i ) {
-
 				for ( var j = 0; j < wSM.trackedSubs[wIndex].searchWords.length; ++j ) {
 
-					wSTResult = wTitles[i]["atom:content"]["#"].toLowerCase().indexOf( wSM.trackedSubs[wIndex].searchWords[j] );
+					wSTResult = wTitles[i]["description"].toLowerCase().indexOf( wSM.trackedSubs[wIndex].searchWords[j] );
 					if ( wSTResult != -1 ) {
-						var wtemp = wTitles[i].link.split("/");
-						if ( wtemp.length === 10 ) {
-							wSM.trackedSubs[wIndex].foundLinks.push( wTitles[i].link )
-						}
+						wSM.trackedSubs[wIndex].foundLinks.push( wTitles[i].link )
 					}
 
 				}
@@ -197,17 +197,14 @@ var wSM = {
 			var wFresh = true;
 
 			if ( savedResults[ wCName ] === undefined ) { savedResults[ wCName ] = wSM.trackedSubs[wIndex].foundLinks; needToEmail = wSM.trackedSubs[wIndex].foundLinks; wFresh = false; }
-			else {  /* console.log( savedResults[ wCName ] ); */ }
 
 			function searchSavedResults() {
 				console.log("searching saved results");
 				for ( var i = 0; i < wSM.trackedSubs[wIndex].foundLinks.length; ++i ) {
 				
-					console.log( wSM.trackedSubs[wIndex].foundLinks[i] );
-
 					// Skip Already "Saved / Alerted" Results
 					var wTest = savedResults[ wCName ].indexOf( wSM.trackedSubs[wIndex].foundLinks[i] );
-					if ( wTest != -1 ) { console.log( "coninuing" ); continue; }
+					if ( wTest != -1 ) { continue; }
 
 					needToEmail.push( wSM.trackedSubs[wIndex].foundLinks[i] );
 					savedResults[ wCName ].push( wSM.trackedSubs[wIndex].foundLinks[i] );
