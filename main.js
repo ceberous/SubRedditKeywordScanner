@@ -232,8 +232,8 @@ var wSM = {
 				}
 				server.send({
 				   text:    wSB, 
-				   from:    "subreddit.notifier@gmail.com", 
-				   to:      "cerbus.collin@gmail.com",
+				   from:    personal.from, 
+				   to:      personal.to,
 				   subject: "autism word used in /r/science"
 				} , function( err , message ) { console.log( err || message ); } );
 
