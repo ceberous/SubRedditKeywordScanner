@@ -1,3 +1,4 @@
+var process = require("process");
 var FeedParser = require('feedparser');
 var request = require("request");
 var jsonfile = require("jsonfile");
@@ -15,12 +16,12 @@ catch (err) {
 	jsonfile.writeFileSync( saveFilePath , savedResults );
 }
 
-
+var personal = require("./personal.js").data;
 var server 	= email.server.connect({
-   user:    "", 
-   password:"", 
-   host:    "", 
-   ssl:     true
+   user:     personal.user, 
+   password: personal.password,
+   host:     personal.host, 
+   ssl:      personal.ssl
 });
 
 var wEmitter = null;
@@ -53,7 +54,6 @@ var wSM = {
 			cronNew: "*/59 * * * *", // every 1 hour
 		});
 
-		// schedule via node-schedule
 		var wTopJob = schedule.scheduleJob( wSM.trackedSubs[ wCINX ].cronTop , function() {
 			if ( wEmitter == null ) {
 				wSM.enumerateSubRedditDEEP( wCINX , wSM.trackedSubs[wCINX].urls.top );
@@ -72,9 +72,12 @@ var wSM = {
 
 		wSM.activeJobs.push( wTopJob );
 		wSM.activeJobs.push( wNewJob );
-
-
-		wSM.enumerateSubRedditDEEP( wCINX , wSM.trackedSubs[wCINX].urls.new );
+		
+		
+		//var wKey = process.argv[2] || "new";
+		//console.log(wKey);
+		//console.log( wSM.trackedSubs[wCINX].urls[wKey] );
+		//wSM.enumerateSubRedditDEEP( wCINX , wSM.trackedSubs[wCINX].urls[wKey] );
 
 	},
 
@@ -88,14 +91,15 @@ var wSM = {
 		wSM.trackedSubs[wIndex].startTime = new Date().getTime();
 
 		var wCLen = 0; // global needed
+		var wTitles = null;
 
 		var wSubChildrenLength = 0;
 		wSM.fetchXML( wSortMode , "topOfSubComplete" );
 		wEmitter.on( "topOfSubComplete" , function( wResults ) {
 			wSubChildrenLength = wResults.length - 1;
+			wTitles = wResults;
 			console.log( "Total Children == " + wSubChildrenLength.toString() );
 			for ( var i = 0; i < wSubChildrenLength; ++i ) {
-				//console.log( wResults[i].link + ".rss" );
 				wSM.fetchXML( wResults[i].link + ".rss" , "topOfChildComplete" );
 			}
 		});
@@ -108,7 +112,6 @@ var wSM = {
 				wSM.trackedSubs[wIndex].wModel.push( wResults[i].link );
 			}
 			if ( wChildCount === wSubChildrenLength ) {
-				//console.log( wSM.trackedSubs[wIndex].wModel );
 				wCLen = wSM.trackedSubs[wIndex].wModel.length;
 				getEachComment();
 			}
@@ -122,7 +125,7 @@ var wSM = {
 				wCommentCount += 1;
 			}
 			else {
-				wEmitter.emit( "searchComplete" , wIndex );
+				scanTitles( wIndex )
 			}
 
 		}
@@ -130,6 +133,27 @@ var wSM = {
 			getEachComment();
 			scanComment( wResults );
 		});
+
+		function scanTitles( wIndex ) {
+			console.log("scanning titles");
+			for ( var i = 0; i < wTitles.length; ++i ) {
+
+				for ( var j = 0; j < wSM.trackedSubs[wIndex].searchWords.length; ++j ) {
+
+					wSTResult = wTitles[i]["atom:content"]["#"].toLowerCase().indexOf( wSM.trackedSubs[wIndex].searchWords[j] );
+					if ( wSTResult != -1 ) {
+						var wtemp = wTitles[i].link.split("/");
+						if ( wtemp.length === 10 ) {
+							wSM.trackedSubs[wIndex].foundLinks.push( wTitles[i].link )
+						}
+					}
+
+				}
+
+			}
+
+			wEmitter.emit( "searchComplete" , wIndex );
+		}
 
 		function scanComment( wResults ) {
 
@@ -142,7 +166,6 @@ var wSM = {
 					if ( wSTResult != -1 ) {
 						var wtemp = wResults[i].link.split("/");
 						if ( wtemp.length === 10 ) {
-							//console.log( wResults[i].link );
 							wSM.trackedSubs[wIndex].foundLinks.push( wResults[i].link )
 						}
 					}
@@ -153,7 +176,6 @@ var wSM = {
 
 		wEmitter.on( "searchComplete" , function( wIndex ) {
 			wSM.trackedSubs[wIndex].foundLinks = Array.from( new Set( wSM.trackedSubs[wIndex].foundLinks ) );
-			//console.log( wSM.trackedSubs[wIndex].foundLinks );
 			var timeNow = new Date().getTime();
 			var wSeconds = ( timeNow - wSM.trackedSubs[wIndex].startTime ) / 1000;
 			var wMinutes = Math.floor( wSeconds / 60 );
@@ -185,11 +207,8 @@ var wSM = {
 
 					// Skip Already "Saved / Alerted" Results
 					var wTest = savedResults[ wCName ].indexOf( wSM.trackedSubs[wIndex].foundLinks[i] );
-					//console.log(wTest);
 					if ( wTest != -1 ) { console.log( "coninuing" ); continue; }
 
-					//console.log( "need to do something with +" );
-					//console.log( wSM.trackedSubs[wIndex].foundLinks[i] );
 					needToEmail.push( wSM.trackedSubs[wIndex].foundLinks[i] );
 					savedResults[ wCName ].push( wSM.trackedSubs[wIndex].foundLinks[i] );
 
@@ -207,13 +226,10 @@ var wSM = {
 		function emailResults( wNeedToEmailResults ) {
 
 			if ( wNeedToEmailResults.length >= 1 ) {
-				//console.log( "we have stuff to alert !!!!" );
-				//console.log( wNeedToEmailResults );
 				var wSB = "";
 				for ( var i = 0; i < wNeedToEmailResults.length; ++i ) {
 					wSB = wSB + "[" + i.toString() + "]\t \n " + wNeedToEmailResults[i] + "\n\n\n";
 				}
-				//console.log(wSB);
 				server.send({
 				   text:    wSB, 
 				   from:    "subreddit.notifier@gmail.com", 
@@ -222,8 +238,6 @@ var wSM = {
 				} , function( err , message ) { console.log( err || message ); } );
 
 			}
-
-			//wSM.enumerateSubRedditDEEP(0);
 
 		}
 
@@ -242,7 +256,7 @@ var wSM = {
 		var feedparser = new FeedParser( [wOptions] );
 		
 		wReq.on( 'error' , function (error) {
-			//console.log(error);
+			console.log(error);
 			return;
 		});
 
@@ -284,4 +298,3 @@ var wSM = {
 
 
 wSM.monitor( "science" , [ "autis" ] );
-//wFM.monitor("https://www.reddit.com/r/science/comments/4dvyxy/science_ama_series_im_tristram_smith_phd_of_the/.rss");
